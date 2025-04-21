@@ -1,139 +1,180 @@
-import tkinter #tk-interface (graphical user interface library)
+import os
+from abc import ABC, abstractmethod
 
-def set_tile(row, column):
-    global curr_player
+# ——— Abstraction ———
+class Game(ABC):
+    @abstractmethod
+    def make_move(self, row: int, col: int) -> bool:
+        """Attempt to play at (row, col). Return True if successful."""
+        pass
 
-    if (game_over):
+    @abstractmethod
+    def check_winner(self) -> str | None:
+        """Return 'X', 'O', 'Tie', or None if the game is still ongoing."""
+        pass
+
+    @abstractmethod
+    def display(self) -> None:
+        """Show the current board."""
+        pass
+
+    @abstractmethod
+    def run(self) -> None:
+        """Drive the main game loop."""
+        pass
+
+class Saver(ABC):
+    @abstractmethod
+    def save(self, text: str) -> None:
+        """Persist a line of text."""
+        pass
+
+    @abstractmethod
+    def load(self) -> str:
+        """Load all saved lines as one big string."""
+        pass
+
+
+# ——— Inheritance + Encapsulation + Aggregation ———
+class TicTacToeGame(Game):
+    def __init__(self, saver: Saver):
+        self._board = [[" "]*3 for _ in range(3)]
+        self._current = "X"
+        self._moves = 0
+        self._saver = saver
+
+    def make_move(self, row, col):
+        # row and col are 0-based internally
+        if not (0 <= row < 3 and 0 <= col < 3):
+            return False
+        if self._board[row][col] != " ":
+            return False
+        self._board[row][col] = self._current
+        self._moves += 1
+        return True
+
+    def check_winner(self):
+        b = self._board
+        lines = (
+            [b[i][0] + b[i][1] + b[i][2] for i in range(3)] +    # rows
+            [b[0][i] + b[1][i] + b[2][i] for i in range(3)] +    # cols
+            [b[0][0] + b[1][1] + b[2][2], b[0][2] + b[1][1] + b[2][0]]  # diags
+        )
+        for line in lines:
+            if line == "XXX":
+                return "X"
+            if line == "OOO":
+                return "O"
+        if self._moves == 9:
+            return "Tie"
+        return None
+
+    def display(self):
+        print("\n".join(" | ".join(self._board[r]) for r in range(3)))
+        print()
+
+    def run(self):
+        print("Starting Tic‑Tac‑Toe!")
+        while True:
+            self.display()
+            move = input(f"Player {self._current}, enter row,col (1–3): ")
+            try:
+                r_input, c_input = map(int, move.split(","))
+            except ValueError:
+                print("Invalid format. Use two numbers 1–3 separated by a comma.")
+                continue
+
+            # convert to 0-based
+            r, c = r_input - 1, c_input - 1
+
+            if not self.make_move(r, c):
+                print("Move invalid or cell taken, try again (rows/cols 1–3).")
+                continue
+
+            winner = self.check_winner()
+            if winner:
+                self.display()
+                msg = "It's a Tie!" if winner == "Tie" else f"Player {winner} wins!"
+                print(msg)
+                self._saver.save(msg)
+                break
+
+            # switch player
+            self._current = "O" if self._current == "X" else "X"
+
+    def reset(self):
+        """Clear the board and move counter, keep same saver."""
+        self._board = [[" "]*3 for _ in range(3)]
+        self._current = "X"
+        self._moves = 0
+
+
+# ——— Polymorphism ———
+class FileSaver(Saver):
+    def __init__(self, filename="results.txt"):
+        self.filename = filename
+
+    def save(self, text: str):
+        with open(self.filename, "a") as f:
+            f.write(text + "\n")
+
+    def load(self) -> str:
+        if not os.path.exists(self.filename):
+            return "(no results yet)\n"
+        with open(self.filename) as f:
+            return f.read()
+
+class ConsoleSaver(Saver):
+    def save(self, text: str):
+        print(f"(would save) → {text}")
+
+    def load(self) -> str:
+        return "(console‑only, no file)\n"
+
+
+# ——— Decorator ———
+class LoggedGame(Game):
+    def __init__(self, game: Game):
+        self._game = game
+
+    def make_move(self, row: int, col: int) -> bool:
+        # Logging uses 1-based coordinates for clarity
+        print(f"[LOG] Player {self._game._current} → move at ({row+1}, {col+1})")
+        return self._game.make_move(row, col)
+
+    def check_winner(self) -> str | None:
+        return self._game.check_winner()
+
+    def display(self) -> None:
+        self._game.display()
+
+    def run(self) -> None:
+        self._game.run()
+
+
+# ——— Main CLI with Restart Option ———
+def main():
+    print("1) Play a new game")
+    print("2) View past results")
+    choice = input("Select 1 or 2: ").strip()
+
+    saver: Saver = FileSaver("results.txt")
+
+    if choice == "2":
+        print("\n=== Past Results ===")
+        print(saver.load())
         return
 
-    if board[row][column]["text"] != "":
-        #already taken spot
-        return
-    
-    board[row][column]["text"] = curr_player #mark the board
+    base_game = TicTacToeGame(saver)
+    game = LoggedGame(base_game)
 
-    if curr_player == playerO: #switch player
-        curr_player = playerX
-    else:
-        curr_player = playerO
-    
-    label["text"] = curr_player+"'s turn"
+    while True:
+        base_game.reset()
+        game.run()
+        again = input("Play again? (y/n): ").strip().lower()
+        if again != "y":
+            print("Thanks for playing!")
+            break
 
-    #check winner
-    check_winner()
-
-def check_winner():
-    global turns, game_over
-    turns += 1
-
-    #horizontally, check 3 rows
-    for row in range(3):
-        if (board[row][0]["text"] == board[row][1]["text"] == board[row][2]["text"]
-            and board[row][0]["text"] != ""):
-            label.config(text=board[row][0]["text"]+" is the winner!", foreground=color_yellow)
-            for column in range(3):
-                board[row][column].config(foreground=color_yellow, background=color_light_gray)
-            game_over = True
-            return
-    
-    #vertically, check 3 columns
-    for column in range(3):
-        if (board[0][column]["text"] == board[1][column]["text"] == board[2][column]["text"]
-            and board[0][column]["text"] != ""):
-            label.config(text=board[0][column]["text"]+" is the winner!", foreground=color_yellow)
-            for row in range(3):
-                board[row][column].config(foreground=color_yellow, background=color_light_gray)
-            game_over = True
-            return
-    
-    #diagonally
-    if (board[0][0]["text"] == board[1][1]["text"] == board[2][2]["text"]
-        and board[0][0]["text"] != ""):
-        label.config(text=board[0][0]["text"]+" is the winner!", foreground=color_yellow)
-        for i in range(3):
-            board[i][i].config(foreground=color_yellow, background=color_light_gray)
-        game_over = True
-        return
-
-    #anti-diagionally
-    if (board[0][2]["text"] == board[1][1]["text"] == board[2][0]["text"]
-        and board[0][2]["text"] != ""):
-        label.config(text=board[0][2]["text"]+" is the winner!", foreground=color_yellow)
-        board[0][2].config(foreground=color_yellow, background=color_light_gray)
-        board[1][1].config(foreground=color_yellow, background=color_light_gray)
-        board[2][0].config(foreground=color_yellow, background=color_light_gray)
-        game_over = True
-        return
-    
-    #tie
-    if (turns == 9):
-        game_over = True
-        label.config(text="Tie!", foreground=color_yellow)
-
-
-def new_game():
-    global turns, game_over
-
-    turns = 0
-    game_over = False
-
-    label.config(text=curr_player+"'s turn", foreground="white")
-
-    for row in range(3):
-        for column in range(3):
-            board[row][column].config(text="", foreground=color_blue, background=color_gray)
-
-
-#game setup
-playerX = "X"
-playerO = "O"
-curr_player = playerX
-board = [[0, 0, 0], 
-         [0, 0, 0], 
-         [0, 0, 0]]
-
-color_blue = "#4584b6"
-color_yellow = "#ffde57"
-color_gray = "#343434"
-color_light_gray = "#646464"
-
-turns = 0
-game_over = False
-
-#window setup
-window = tkinter.Tk() #create the game window
-window.title("Tic Tac Toe")
-window.resizable(False, False)
-
-frame = tkinter.Frame(window)
-label = tkinter.Label(frame, text=curr_player+"'s turn", font=("Consolas", 20), background=color_gray,
-                      foreground="white")
-label.grid(row=0, column=0, columnspan=3, sticky="we")
-
-for row in range(3):
-    for column in range(3):
-        board[row][column] = tkinter.Button(frame, text="", font=("Consolas", 50, "bold"),
-                                            background=color_gray, foreground=color_blue, width=4, height=1,
-                                            command=lambda row=row, column=column: set_tile(row, column))
-        board[row][column].grid(row=row+1, column=column)
-
-button = tkinter.Button(frame, text="restart", font=("Consolas", 20), background=color_gray,
-                        foreground="white", command=new_game)
-button.grid(row=4, column=0, columnspan=3, sticky="we")
-
-frame.pack()
-
-#center the window
-window.update()
-window_width = window.winfo_width()
-window_height = window.winfo_height()
-screen_width = window.winfo_screenwidth()
-screen_height = window.winfo_screenheight()
-
-window_x = int((screen_width/2) - (window_width/2))
-window_y = int((screen_height/2) - (window_height/2))
-
-#format "(w)x(h)+(x)+(y)"
-window.geometry(f"{window_width}x{window_height}+{window_x}+{window_y}")
-
-window.mainloop()
+if __name__ == "__main__":
+    main()
