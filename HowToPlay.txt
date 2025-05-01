@@ -1,5 +1,0 @@
-open cmd 
-
-cd path/to/your/script
-
-python main.py
