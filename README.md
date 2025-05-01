@@ -1,7 +1,5 @@
 Šis kursinis yra TIC-TAC-TOE žaidimas.
 
-Privalomi naudoti 4 OOP pilars:
-
 Abstraction:
 
 ![image](https://github.com/user-attachments/assets/e5624067-efe3-46bc-8858-005f2b11512c)
@@ -21,5 +19,5 @@ Polymorphism and Decorator
 ![image](https://github.com/user-attachments/assets/ef0c25d8-3411-4dac-985e-eb47c20cd5c3)
 
 Ši klasė veikia su bet kokiomis Game pveldenčiomis klasėmis, todėl tai yra Polymorphism.
-Decorator prideda funkciją į TicTacToeGame jos nekeisdamas, kad kai yra įrašomas X arba O, kur buvo ir kas buvo įvesta.
+Decorator prideda funkciją į TicTacToeGame jos nekeisdamas, kad kai yra įrašomas X arba O, tą veiksmą išsaugo ir išveda ant ekrano.
 
