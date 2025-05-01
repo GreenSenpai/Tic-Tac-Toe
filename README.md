@@ -16,9 +16,9 @@ Encapsulation and Inheretance and Aggregation:
 
 ![image](https://github.com/user-attachments/assets/09acdca9-e162-4095-abcf-e150f706b922)
 
-Naudojame privačias klases, kurias norėdami kaisti turime sukurti atskiras funkcijas, todėl tai yra encapsulation.
+Naudojame privačias klases, todėl tai yra encapsulation.
 
-Ši klasė paveldi taip pat paveldi abstrakčios klasės Game savybes. todėl tai yra inheritance.
+Ši klasė paveldi taip pat paveldi abstrakčios klasės Game savybes, todėl tai yra inheritance.
 
 Taip pat ši klasė, naudoją klasę ConsoleSaver, kad išsaugoti žaidimos rezultatus. Console Saver gali egzistuoti be TicTacToe game klasės, todėl tai yra agregacija.
 
