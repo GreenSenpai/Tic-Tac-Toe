@@ -1,7 +1,10 @@
 Šis kursinis yra TIC-TAC-TOE žaidimas.
 
 Jis yra paleidžiamas per cmd konsolė, naudojant cd komanda ir parašant aplankalo vardą, kur yra programa.
+
 Tada turi buti instaliuota python compiler ir yra parašoma "pyhon main.py" ir žaidimas pasileidžia konsolėje.
+
+Anlogiškai paleidžiamas ir testų failas naudojant "python -m unittest test_tictactoe.py" komandą.
 
 Kur kas yra naudojama?
 
@@ -40,7 +43,9 @@ Kiekvieno žaidimo rezultatai yra išsaugomi į failą ir juos galime pasižiūr
 Išvados.
 
 Kuriant šį žaidimą buvo sunku panaudoti visus OOP programavimo principus, nes žaidimas nera sudėtingas ir žymiai lengviau kodą parašyti jų nenaudojant.
+
 Rašant šį darbą padėjo dirbtinis intelektas, tik kartais buvo sunku suprasti jo naudojamą sintaksę ir funkcijas.
+
 Buvo parašyti ir preiti visi Unit testai, kurie patikrina ėjimus, išsaugomus rezultatus.
 
 
